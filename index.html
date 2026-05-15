@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🍺 Gestion de Boissons</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+</head>
+
+<body>
+
+  <header class="header">
+    <div class="logo">🍺 BarStock</div>
+    <nav class="nav">
+      <button class="nav-btn active" onclick="showSection('catalogue')" data-section="catalogue">📦 Catalogue</button>
+      <button class="nav-btn" onclick="showSection('stock')" data-section="stock">🏪 Stock</button>
+      <button class="nav-btn" onclick="showSection('ventes')" data-section="ventes">🧾 Ventes</button>
+      <button class="nav-btn" onclick="showSection('historique')" data-section="historique">📊 Historique</button>
+    </nav>
+  </header>
+
+  <main class="main">
+
+    <!-- =====================================================
+         SECTION CATALOGUE
+         NOUVEAUTÉ : barre de recherche ajoutée au-dessus
+         du tableau pour chercher une boisson et voir
+         immédiatement son stock, son prix BBC, son prix vente.
+         ===================================================== -->
+    <section id="catalogue" class="section active">
+
+      <div class="stats-grid" id="stats-catalogue"></div>
+
+      <div class="card">
+        <h2 class="card-title">➕ Ajouter une boisson</h2>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="f-nom">Nom de la boisson</label>
+            <input type="text" id="f-nom" placeholder="Ex : Castel Bière" />
+          </div>
+          <div class="form-group">
+            <label for="f-categorie">Catégorie</label>
+            <select id="f-categorie">
+              <option value="Bière">Bière</option>
+              <option value="Soda">Soda</option>
+              <option value="Eau">Eau</option>
+              <option value="Jus">Jus</option>
+              <option value="Vin">Vin</option>
+              <option value="Spiritueux">Spiritueux</option>
+              <option value="Autre">Autre</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="f-bbc">Prix BBC — achat (FCFA)</label>
+            <input type="number" id="f-bbc" placeholder="500" min="0" />
+          </div>
+          <div class="form-group">
+            <label for="f-vente">Prix de vente (FCFA)</label>
+            <input type="number" id="f-vente" placeholder="750" min="0" />
+          </div>
+          <div class="form-group">
+            <label for="f-stock">Stock initial (unités)</label>
+            <input type="number" id="f-stock" placeholder="24" min="0" />
+          </div>
+          <div class="form-group">
+            <label for="f-seuil">Seuil d'alerte</label>
+            <input type="number" id="f-seuil" placeholder="6" min="1" />
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="ajouterBoisson()">➕ Ajouter au catalogue</button>
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">📋 Liste des boissons</h2>
+
+        <!--
+          ╔══════════════════════════════════════════════════╗
+          ║  BARRE DE RECHERCHE — CATALOGUE                  ║
+          ╚══════════════════════════════════════════════════╝
+
+          class="search-box" : div contenant l'icône + le champ.
+          On le stylise en CSS pour ressembler à un vrai champ de recherche.
+
+          oninput="rechercherCatalogue()" :
+          → "oninput" est un événement HTML.
+          → Il se déclenche à CHAQUE frappe de touche (pas besoin d'Entrée).
+          → Il appelle la fonction rechercherCatalogue() dans app.js.
+          → Cette fonction lit ce que l'utilisateur a tapé, filtre le tableau,
+            et re-dessine uniquement les boissons correspondantes.
+
+          id="search-catalogue" :
+          → JS lira ce champ avec getElementById('search-catalogue').value
+            pour savoir ce que l'utilisateur cherche.
+        -->
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input
+            type="text"
+            id="search-catalogue"
+            placeholder="Rechercher une boisson par nom ou catégorie..."
+            oninput="rechercherCatalogue()"
+          />
+        </div>
+
+        <div class="table-wrapper">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Nom</th>
+                <th>Catégorie</th>
+                <th>Prix BBC</th>
+                <th>Prix vente</th>
+                <th>Marge</th>
+                <th>Stock</th>
+                <th>Statut</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <!--
+              tbody vide : JavaScript le remplit dynamiquement.
+              La recherche filtre ce qui est injecté ici.
+            -->
+            <tbody id="tbody-catalogue"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+
+
+    <!-- Section Stock — inchangée -->
+    <section id="stock" class="section">
+      <div id="zone-alertes"></div>
+      <div class="card">
+        <h2 class="card-title">🏪 Gestion du stock</h2>
+        <div class="table-wrapper">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Boisson</th>
+                <th>Stock actuel</th>
+                <th>Seuil alerte</th>
+                <th>Statut</th>
+                <th>Ajuster</th>
+                <th>Approvisionner</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-stock"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- =====================================================
+         SECTION VENTES
+         NOUVEAUTÉS :
+         1. Barre de recherche pour trouver vite un produit
+         2. Champ numérique pour saisir la quantité directement
+            (ex: taper "12" au lieu de cliquer "+" 12 fois)
+         ===================================================== -->
+    <section id="ventes" class="section">
+
+      <div class="ventes-grid">
+
+        <div>
+          <h2 class="card-title" style="margin-bottom: 1rem;">🛒 Produits disponibles</h2>
+
+          <!--
+            ╔══════════════════════════════════════════════════╗
+            ║  BARRE DE RECHERCHE — VENTES                     ║
+            ╚══════════════════════════════════════════════════╝
+
+            Même principe que dans le catalogue.
+            oninput="rechercherVentes()" :
+            → À chaque lettre tapée, rechercherVentes() est appelée.
+            → Elle filtre la liste des produits affichés à gauche
+              pour ne montrer que ceux qui correspondent à la recherche.
+            → Le panier (ticket à droite) n'est pas affecté :
+              les articles déjà choisis restent dans le ticket.
+          -->
+          <div class="search-box" style="margin-bottom: 0.75rem;">
+            <span class="search-icon">🔍</span>
+            <input
+              type="text"
+              id="search-ventes"
+              placeholder="Rechercher une boisson..."
+              oninput="rechercherVentes()"
+            />
+          </div>
+
+          <!--
+            id="liste-produits-vente" :
+            JS injecte la liste des produits ici.
+            Quand on recherche, JS re-injecte seulement
+            les produits filtrés dans cette div.
+          -->
+          <div class="card" id="liste-produits-vente"></div>
+        </div>
+
+        <!-- Ticket de caisse — inchangé -->
+        <div>
+          <h2 class="card-title" style="margin-bottom: 1rem;">🧾 Ticket de vente</h2>
+          <div class="card">
+            <div id="ticket-detail">
+              <p class="vide">Aucun article sélectionné</p>
+            </div>
+            <div class="total-box">
+              <span>Total à payer</span>
+              <span id="total-montant">0 FCFA</span>
+            </div>
+            <div class="btn-row" style="margin-top: 1rem;">
+              <button class="btn btn-primary" onclick="validerVente()">✅ Valider la vente</button>
+              <button class="btn btn-danger" onclick="annulerVente()">❌ Annuler</button>
+            </div>
+          </div>
+          <div class="card recap-card">
+            <div class="recap-row">
+              <span>Coût total (BBC)</span>
+              <strong id="recap-bbc">0 FCFA</strong>
+            </div>
+            <div class="recap-row">
+              <span>Bénéfice estimé</span>
+              <strong id="recap-benef" class="benef">0 FCFA</strong>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- Section Historique — inchangée -->
+    <section id="historique" class="section">
+      <div class="stats-grid" id="stats-historique"></div>
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">📊 Historique des ventes</h2>
+          <button class="btn btn-danger btn-sm" onclick="effacerHistorique()">🗑️ Tout effacer</button>
+        </div>
+        <div id="liste-historique"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!--
+    Le fichier JS est chargé EN DERNIER, après tout le HTML.
+    Raison : JS manipule le HTML — il faut que le HTML existe
+    avant que JS essaie d'y accéder.
+  -->
+  <script src="app.js"></script>
+
+</body>
+</html>
